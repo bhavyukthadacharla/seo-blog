@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation'
 
 export async function generateMetadata({ params }) {
   const slug = (await params).slug
-  
+
   const { data: article } = await supabase
     .from('articles')
     .select('*')
@@ -29,22 +29,41 @@ export default async function ArticlePage({ params }) {
 
   if (!article || !article.published) notFound()
 
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Article',
+    headline: article.title,
+    description: article.meta_description,
+    datePublished: article.created_at,
+    dateModified: article.updated_at,
+    author: {
+      '@type': 'Person',
+      name: 'Abhiram',
+    },
+  }
+
   return (
-    <article className="max-w-3xl mx-auto px-4 py-10">
-      <h1 className="text-4xl font-bold mb-4">{article.title}</h1>
-      <time className="text-sm text-gray-400">
-        {new Date(article.created_at).toDateString()}
-      </time>
-      {article.image_url && (
-        <img
-          src={article.image_url}
-          alt={article.title}
-          className="w-full rounded-lg my-6"
-        />
-      )}
-      <div className="prose mt-6 whitespace-pre-wrap">
-        {article.content}
-      </div>
-    </article>
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <article className="max-w-3xl mx-auto px-4 py-10">
+        <h1 className="text-4xl font-bold mb-4">{article.title}</h1>
+        <time className="text-sm text-gray-400">
+          {new Date(article.created_at).toDateString()}
+        </time>
+        {article.image_url && (
+          <img
+            src={article.image_url}
+            alt={article.title}
+            className="w-full rounded-lg my-6"
+          />
+        )}
+        <div className="prose mt-6 whitespace-pre-wrap">
+          {article.content}
+        </div>
+      </article>
+    </>
   )
 }
