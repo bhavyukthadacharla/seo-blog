@@ -2,10 +2,12 @@ import { supabase } from '@/lib/supabase'
 import { notFound } from 'next/navigation'
 
 export async function generateMetadata({ params }) {
+  const slug = (await params).slug
+  
   const { data: article } = await supabase
     .from('articles')
     .select('*')
-    .eq('slug', params.slug)
+    .eq('slug', slug)
     .single()
 
   if (!article) return {}
@@ -17,10 +19,12 @@ export async function generateMetadata({ params }) {
 }
 
 export default async function ArticlePage({ params }) {
+  const slug = (await params).slug
+
   const { data: article } = await supabase
     .from('articles')
     .select('*')
-    .eq('slug', params.slug)
+    .eq('slug', slug)
     .single()
 
   if (!article || !article.published) notFound()
