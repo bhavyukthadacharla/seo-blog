@@ -6,7 +6,8 @@ export default function AdminPage() {
   const [articles, setArticles] = useState([])
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
-  const [imageUrl, setImageUrl] = useState('')
+  const [imageFile, setImageFile] = useState(null)
+  const [imagePreview, setImagePreview] = useState('')
   const [metaDescription, setMetaDescription] = useState('')
   const [editingId, setEditingId] = useState(null)
   const [loading, setLoading] = useState(false)
@@ -31,29 +32,71 @@ export default function AdminPage() {
       .trim()
   }
 
+  function handleImageChange(e) {
+    const file = e.target.files[0]
+    if (file) {
+      setImageFile(file)
+      setImagePreview(URL.createObjectURL(file))
+    }
+  }
+
+  async function uploadImage(file) {
+    const fileExt = file.name.split('.').pop()
+    const fileName = `${Date.now()}.${fileExt}`
+    const { error } = await supabase.storage
+      .from('images')
+      .upload(fileName, file)
+    if (error) throw error
+    const { data } = supabase.storage
+      .from('images')
+      .getPublicUrl(fileName)
+    return data.publicUrl
+  }
+
   async function handleSubmit() {
     if (!title || !content) return alert('Title and content are required')
     setLoading(true)
-    const slug = generateSlug(title)
 
-    if (editingId) {
-      await supabase
-        .from('articles')
-        .update({ title, content, image_url: imageUrl, meta_description: metaDescription, slug, updated_at: new Date() })
-        .eq('id', editingId)
-    } else {
-      await supabase
-        .from('articles')
-        .insert([{ title, content, image_url: imageUrl, meta_description: metaDescription, slug }])
+    try {
+      const slug = generateSlug(title)
+      let imageUrl = ''
+
+      if (imageFile) {
+        imageUrl = await uploadImage(imageFile)
+      }
+
+      if (editingId) {
+        const updateData = {
+          title,
+          content,
+          meta_description: metaDescription,
+          slug,
+          updated_at: new Date()
+        }
+        if (imageUrl) updateData.image_url = imageUrl
+
+        await supabase
+          .from('articles')
+          .update(updateData)
+          .eq('id', editingId)
+      } else {
+        await supabase
+          .from('articles')
+          .insert([{ title, content, image_url: imageUrl, meta_description: metaDescription, slug }])
+      }
+
+      setTitle('')
+      setContent('')
+      setImageFile(null)
+      setImagePreview('')
+      setMetaDescription('')
+      setEditingId(null)
+      fetchArticles()
+    } catch (err) {
+      alert('Error saving article: ' + err.message)
     }
 
-    setTitle('')
-    setContent('')
-    setImageUrl('')
-    setMetaDescription('')
-    setEditingId(null)
     setLoading(false)
-    fetchArticles()
   }
 
   async function handleDelete(id) {
@@ -74,42 +117,65 @@ export default function AdminPage() {
     setEditingId(article.id)
     setTitle(article.title)
     setContent(article.content)
-    setImageUrl(article.image_url || '')
+    setImagePreview(article.image_url || '')
     setMetaDescription(article.meta_description || '')
+  }
+
+  function handleLogout() {
+    document.cookie = 'admin_auth=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT'
+    window.location.href = '/admin/login'
   }
 
   return (
     <main className="max-w-4xl mx-auto px-4 py-10">
-      <h1 className="text-3xl font-bold mb-8">Admin Panel</h1>
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-3xl font-bold">Admin Panel</h1>
+        <button
+          onClick={handleLogout}
+          className="px-4 py-2 rounded border text-sm hover:bg-gray-100"
+        >
+          Logout
+        </button>
+      </div>
 
       <div className="border rounded-lg p-6 mb-10">
         <h2 className="text-xl font-semibold mb-4">
           {editingId ? 'Edit Article' : 'New Article'}
         </h2>
         <input
-          className="w-full border rounded px-3 py-2 mb-3"
+          className="w-full border rounded px-3 py-2 mb-3 bg-white text-black"
           placeholder="Title"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
         />
         <textarea
-          className="w-full border rounded px-3 py-2 mb-3 h-40"
+          className="w-full border rounded px-3 py-2 mb-3 h-40 bg-white text-black"
           placeholder="Content"
           value={content}
           onChange={(e) => setContent(e.target.value)}
         />
         <input
-          className="w-full border rounded px-3 py-2 mb-3"
-          placeholder="Image URL (optional)"
-          value={imageUrl}
-          onChange={(e) => setImageUrl(e.target.value)}
-        />
-        <input
-          className="w-full border rounded px-3 py-2 mb-3"
+          className="w-full border rounded px-3 py-2 mb-3 bg-white text-black"
           placeholder="Meta description (optional)"
           value={metaDescription}
           onChange={(e) => setMetaDescription(e.target.value)}
         />
+        <div className="mb-3">
+          <label className="block text-sm mb-1">Upload Image (optional)</label>
+          <input
+            type="file"
+            accept="image/*"
+            onChange={handleImageChange}
+            className="w-full border rounded px-3 py-2 bg-white text-black"
+          />
+          {imagePreview && (
+            <img
+              src={imagePreview}
+              alt="Preview"
+              className="mt-2 h-40 object-cover rounded"
+            />
+          )}
+        </div>
         <button
           onClick={handleSubmit}
           disabled={loading}
@@ -119,7 +185,7 @@ export default function AdminPage() {
         </button>
         {editingId && (
           <button
-            onClick={() => { setEditingId(null); setTitle(''); setContent(''); setImageUrl(''); setMetaDescription('') }}
+            onClick={() => { setEditingId(null); setTitle(''); setContent(''); setImageFile(null); setImagePreview(''); setMetaDescription('') }}
             className="ml-3 px-6 py-2 rounded border hover:bg-gray-100"
           >
             Cancel
