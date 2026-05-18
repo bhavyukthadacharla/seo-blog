@@ -149,11 +149,11 @@ export default function AdminPage() {
           onChange={(e) => setTitle(e.target.value)}
         />
         <textarea
-          className="w-full border rounded px-3 py-2 mb-3 h-40 bg-white text-black"
-          placeholder="Content"
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-        />
+        className="w-full border rounded px-3 py-2 mb-3 h-60 bg-white text-black font-mono text-sm"
+        placeholder={`Write content in markdown format:\n\n## Heading\n**bold text**\n- bullet point\n- another point`}
+        value={content}
+        onChange={(e) => setContent(e.target.value)}
+      />
         <input
           className="w-full border rounded px-3 py-2 mb-3 bg-white text-black"
           placeholder="Meta description (optional)"

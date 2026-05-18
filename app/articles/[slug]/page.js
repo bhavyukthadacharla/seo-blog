@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/supabase'
 import { notFound } from 'next/navigation'
+import ReactMarkdown from 'react-markdown'
 
 export async function generateMetadata({ params }) {
   const slug = (await params).slug
@@ -38,7 +39,7 @@ export default async function ArticlePage({ params }) {
     dateModified: article.updated_at,
     author: {
       '@type': 'Person',
-      name: 'Abhiram',
+      name: 'Bhavyuktha',
     },
   }
 
@@ -60,8 +61,8 @@ export default async function ArticlePage({ params }) {
             className="w-full rounded-lg my-6"
           />
         )}
-        <div className="prose mt-6 whitespace-pre-wrap">
-          {article.content}
+        <div className="prose prose-invert mt-6 max-w-none">
+          <ReactMarkdown>{article.content}</ReactMarkdown>
         </div>
       </article>
     </>
