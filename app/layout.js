@@ -20,7 +20,7 @@ export default function RootLayout({ children }) {
         </header>
         <main>{children}</main>
         <footer className="border-t px-6 py-4 text-center text-sm text-gray-500 mt-10">
-          © 2026 My Blog. All rights reserved.
+          © 2026 Bhavyuktha's Blog. All rights reserved.
         </footer>
       </body>
     </html>
