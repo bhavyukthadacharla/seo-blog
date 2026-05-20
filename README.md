@@ -121,15 +121,17 @@ Deployed on **Vercel**. Add the same environment variables from `.env.local` in 
 
 ## Project Structure
 
+```
 app/
-page.js                  → Public homepage (article listing)
-layout.js                → Root layout with navbar and footer
-sitemap.js               → Auto-generated sitemap
-articles/[slug]/page.js  → Individual article page
-admin/page.js            → Admin dashboard (protected)
-admin/login/page.js      → Admin login
+  page.js                  → Public homepage (article listing)
+  layout.js                → Root layout with navbar and footer
+  sitemap.js               → Auto-generated sitemap
+  articles/[slug]/page.js  → Individual article page
+  admin/page.js            → Admin dashboard (protected)
+  admin/login/page.js      → Admin login
 components/
-RichTextEditor.js        → Tiptap rich text editor
+  RichTextEditor.js        → Tiptap rich text editor
 lib/
-supabase.js              → Supabase client
+  supabase.js              → Supabase client
 middleware.js              → Protects /admin routes
+```
