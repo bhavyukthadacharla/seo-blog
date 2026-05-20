@@ -132,7 +132,7 @@ export default function AdminPage() {
         <h1 className="text-3xl font-bold">Admin Panel</h1>
         <button
           onClick={handleLogout}
-          className="px-4 py-2 rounded border text-sm hover:bg-gray-100"
+          className="px-4 py-2 rounded border text-sm hover:bg-gray-100 cursor-pointer"
         >
           Logout
         </button>
@@ -179,14 +179,14 @@ export default function AdminPage() {
         <button
           onClick={handleSubmit}
           disabled={loading}
-          className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700"
+          className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 cursor-pointer"
         >
           {loading ? 'Saving...' : editingId ? 'Update Article' : 'Create Article'}
         </button>
         {editingId && (
           <button
             onClick={() => { setEditingId(null); setTitle(''); setContent(''); setImageFile(null); setImagePreview(''); setMetaDescription('') }}
-            className="ml-3 px-6 py-2 rounded border hover:bg-gray-100"
+            className="ml-3 px-6 py-2 rounded border hover:bg-gray-100 cursor-pointer"
           >
             Cancel
           </button>
@@ -203,19 +203,20 @@ export default function AdminPage() {
           <div className="flex gap-2">
             <button
               onClick={() => togglePublish(article)}
-              className={`px-3 py-1 rounded text-sm ${article.published ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}
+            className={`px-3 py-1 rounded text-sm cursor-pointer ${article.published ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}
             >
               {article.published ? 'Published' : 'Draft'}
             </button>
             <button
               onClick={() => handleEdit(article)}
-              className="px-3 py-1 rounded text-sm bg-yellow-100 text-yellow-700"
+            className="px-3 py-1 rounded text-sm bg-yellow-100 text-yellow-700 cursor-pointer"
+
             >
               Edit
             </button>
             <button
               onClick={() => handleDelete(article.id)}
-              className="px-3 py-1 rounded text-sm bg-red-100 text-red-700"
+            className="px-3 py-1 rounded text-sm bg-red-100 text-red-700 cursor-pointer"
             >
               Delete
             </button>

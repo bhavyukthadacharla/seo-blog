@@ -8,7 +8,7 @@ export default function LoginPage() {
   const router = useRouter()
 
   function handleLogin() {
-    if (password === 'admin123') {
+    if (password === process.env.NEXT_PUBLIC_ADMIN_PASSWORD) {
       document.cookie = 'admin_auth=true; path=/'
       router.push('/admin')
     } else {
@@ -29,7 +29,7 @@ export default function LoginPage() {
       {error && <p className="text-red-500 text-sm mb-3">{error}</p>}
       <button
         onClick={handleLogin}
-        className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700"
+        className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 cursor-pointer"
       >
         Login
       </button>
