@@ -1,104 +1,209 @@
-import { supabase } from '@/lib/supabase'
-import { notFound } from 'next/navigation'
-import ReactMarkdown from 'react-markdown'
-import Image from 'next/image'
-
-export async function generateStaticParams() {
-  const { data: articles } = await supabase
-    .from('articles')
-    .select('slug')
-    .eq('published', true)
-
-  return (articles || []).map((a) => ({ slug: a.slug }))
-}
+import Link from "next/link";
+import { supabase } from "@/lib/supabase";
+import { notFound } from "next/navigation";
+import ReactMarkdown from "react-markdown";
+import Navbar from "@/components/Navbar";
 
 export async function generateMetadata({ params }) {
-  const slug = (await params).slug
 
-  const { data: article } = await supabase
-    .from('articles')
-    .select('*')
-    .eq('slug', slug)
-    .single()
+    const { slug } = await params;
 
-  if (!article) return {}
+    const { data: article } = await supabase
+        .from("articles")
+        .select("*")
+        .eq("slug", slug)
+        .single();
 
-  return {
-    title: article.title,
-    description: article.meta_description,
-    openGraph: {
-      title: article.title,
-      description: article.meta_description,
-      type: 'article',
-      publishedTime: article.created_at,
-      modifiedTime: article.updated_at,
-      images: article.image_url ? [{ url: article.image_url }] : [],
-    },
-    twitter: {
-      card: 'summary_large_image',
-      title: article.title,
-      description: article.meta_description,
-      images: article.image_url ? [article.image_url] : [],
-    },
-  }
+    if (!article) {
+
+        return {};
+
+    }
+
+    return {
+
+        title: article.title,
+        description: article.meta_description,
+
+    };
+
 }
 
 export default async function ArticlePage({ params }) {
-  const slug = (await params).slug
 
-  const { data: article } = await supabase
-    .from('articles')
-    .select('*')
-    .eq('slug', slug)
-    .single()
+    const { slug } = await params;
 
-  if (!article || !article.published) notFound()
+    const { data: article } = await supabase
+        .from("articles")
+        .select("*")
+        .eq("slug", slug)
+        .single();
 
-  const wordCount = article.content?.split(/\s+/).length || 0
-  const readingTime = Math.max(1, Math.round(wordCount / 200))
+   if (!article) {
+    notFound();
+}
 
-  const jsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'Article',
-    headline: article.title,
-    description: article.meta_description,
-    datePublished: article.created_at,
-    dateModified: article.updated_at,
-    author: {
-      '@type': 'Person',
-      name: 'Bhavyuktha',
-    },
-    ...(article.image_url && { image: article.image_url }),
-  }
+if (!article.published) {
+    return (
+        <>
+            <Navbar />
 
-  return (
-    <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-      />
-      <article className="max-w-3xl mx-auto px-4 py-10">
-        <h1 className="text-4xl font-bold mb-4">{article.title}</h1>
-        <div className="flex gap-4 text-sm text-gray-400 mb-6">
-          <time>{new Date(article.created_at).toDateString()}</time>
-          <span>{readingTime} min read</span>
-        </div>
-        {article.image_url && (
-          <div className="relative w-full h-64 my-6 rounded-lg overflow-hidden">
-            <Image
-              src={article.image_url}
-              alt={article.title}
-              fill
-              className="object-cover"
-              sizes="(max-width: 768px) 100vw, 768px"
-              priority={false}
-            />
-          </div>
-        )}
-        <div className="prose prose-invert mt-6 max-w-none">
-          <ReactMarkdown>{article.content}</ReactMarkdown>
-        </div>
-      </article>
-    </>
-  )
+            <main className="min-h-screen flex items-center justify-center px-6">
+                <div className="text-center">
+
+                    <h1 className="text-4xl font-bold mb-4">
+                        Article Not Published
+                    </h1>
+
+                    <p className="text-lg text-gray-600 mb-6">
+                        Please publish this article to view it.
+                    </p>
+
+                    <Link
+                        href="/admin"
+                        className="yellow-btn"
+                    >
+                        Back to Admin
+                    </Link>
+
+                </div>
+            </main>
+        </>
+    );
+}
+
+    return (
+        <>
+
+            <Navbar />
+
+            <main className="
+        min-h-screen
+        relative
+        overflow-hidden
+        px-6
+        py-20
+      ">
+
+                {/* BACK BUTTON */}
+
+                <Link
+                    href="/"
+                    className="
+            yellow-btn
+            mb-10
+            inline-flex
+            relative
+            z-20
+          "
+                >
+
+                    ← Back Home
+
+                </Link>
+
+                {/* BACKGROUND BLOBS */}
+
+                <div className="blob blob1"></div>
+
+                <div className="blob blob2"></div>
+
+                <div className="blob blob3"></div>
+
+                {/* ARTICLE */}
+
+                <article className="
+          max-w-4xl
+          mx-auto
+          relative
+          z-10
+        ">
+
+                    {/* TITLE */}
+
+                    <h1 className="
+            text-5xl
+            md:text-7xl
+            font-black
+            leading-tight
+            mb-6
+            text-black
+          ">
+
+                        {article.title}
+
+                    </h1>
+
+                    {/* DATE */}
+
+                    <p className="
+            text-black/60
+            text-lg
+            mb-10
+          ">
+
+                        {new Date(article.created_at).toDateString()}
+
+                    </p>
+
+                    {/* IMAGE */}
+
+                    {article.image_url && (
+
+                        <img
+                            src={article.image_url}
+                            alt={article.title}
+                            className="
+                w-full
+                rounded-3xl
+                mb-10
+                shadow-2xl
+              "
+                        />
+
+                    )}
+
+                    {/* DESCRIPTION */}
+
+                    <div className="
+            text-2xl
+            leading-relaxed
+            text-black/75
+            mb-14
+            font-medium
+          ">
+
+                        {article.meta_description}
+
+                    </div>
+
+                    {/* CONTENT */}
+
+                    <div className="
+            prose
+            prose-lg
+            max-w-none
+            bg-white/50
+            backdrop-blur-xl
+            border
+            border-black/5
+            rounded-3xl
+            p-10
+            shadow-xl
+          ">
+
+                        <ReactMarkdown>
+
+                            {article.content}
+
+                        </ReactMarkdown>
+
+                    </div>
+
+                </article>
+
+            </main>
+
+        </>
+    );
 }

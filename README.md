@@ -1,137 +1,36 @@
-# SEO-Optimised Blog CMS
-
-A full-stack blog platform built with **Next.js 16**, **Supabase**, and **Tailwind CSS**. Admins can create, edit, and publish articles through a protected admin panel. The public site is optimised for SEO and performance.
-
-🌐 **Live Site:** [seo-blog-lac.vercel.app](https://seo-blog-lac.vercel.app)  
-📂 **GitHub:** [github.com/bhavyukthadacharla/seo-blog](https://github.com/bhavyukthadacharla/seo-blog)
-
----
-
-## Features
-
-### Admin Panel
-- Create, edit, delete articles
-- Rich text editor (Tiptap) with bold, italic, headings, lists, blockquote
-- Image upload via Supabase Storage
-- Publish / unpublish toggle
-- Auto-generated URL slug from title
-- Password-protected via middleware and cookie
-
-### Public Site
-- Article listing page with title, description, and date
-- Individual article pages with reading time
-- Semantic HTML (`<article>`, `<header>`, `<footer>`, `<time>`)
-- Fully responsive layout
-
-### SEO
-- Per-article `<title>` and `<meta description>`
-- Open Graph and Twitter Card tags
-- JSON-LD structured data (`Article` schema)
-- Auto-generated `sitemap.xml`
-- Proper heading hierarchy (H1 → H2 → H3)
-
-### Performance
-- Static generation via `generateStaticParams`
-- `next/image` with lazy loading, WebP conversion, and responsive sizes
-- Google Fonts optimised via `next/font`
-
----
-
-## Tech Stack
-
-| Layer | Technology |
-|---|---|
-| Framework | Next.js 16 (App Router) |
-| Database | Supabase (PostgreSQL) |
-| Storage | Supabase Storage |
-| Styling | Tailwind CSS v4 |
-| Editor | Tiptap |
-| Deployment | Vercel |
-
----
+This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
 
 ## Getting Started
 
-### 1. Clone the repo
-
-```bash
-git clone https://github.com/bhavyukthadacharla/seo-blog.git
-cd seo-blog
-```
-
-### 2. Install dependencies
-
-```bash
-npm install
-```
-
-### 3. Set up environment variables
-
-Create a `.env.local` file in the root:
-
-```env
-NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-NEXT_PUBLIC_SITE_URL=https://seo-blog-lac.vercel.app
-NEXT_PUBLIC_ADMIN_PASSWORD=your_admin_password
-```
-
-### 4. Set up Supabase
-
-Create an `articles` table with the following columns:
-
-| Column | Type |
-|---|---|
-| id | uuid (primary key) |
-| title | text |
-| slug | text |
-| content | text |
-| meta_description | text |
-| image_url | text |
-| published | boolean (default: false) |
-| created_at | timestamptz (default: now()) |
-| updated_at | timestamptz |
-
-Also create a Supabase Storage bucket named `images` with public access.
-
-### 5. Run the development server
+First, run the development server:
 
 ```bash
 npm run dev
+# or
+yarn dev
+# or
+pnpm dev
+# or
+bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) to view the public site.  
-Go to [http://localhost:3000/admin/login](http://localhost:3000/admin/login) to access the admin panel.
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
----
+You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
 
-## Deployment
+This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
-Deployed on **Vercel**. Add the same environment variables from `.env.local` in your Vercel project settings.
+## Learn More
 
----
+To learn more about Next.js, take a look at the following resources:
 
-## Lighthouse Score
+- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
+- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
 
-![Performance](public/lighthouse1.jpeg)
-![SEO](public/lighthouse2.jpeg)
-![Accessibility](public/lighthouse3.jpeg)
+You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
----
+## Deploy on Vercel
 
-## Project Structure
+The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
-```
-app/
-  page.js                  → Public homepage (article listing)
-  layout.js                → Root layout with navbar and footer
-  sitemap.js               → Auto-generated sitemap
-  articles/[slug]/page.js  → Individual article page
-  admin/page.js            → Admin dashboard (protected)
-  admin/login/page.js      → Admin login
-components/
-  RichTextEditor.js        → Tiptap rich text editor
-lib/
-  supabase.js              → Supabase client
-middleware.js              → Protects /admin routes
-```
+Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.

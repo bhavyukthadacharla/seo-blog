@@ -1,8 +1,10 @@
 'use client'
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
+import { useRouter } from "next/navigation"
 
 export default function AdminPage() {
+    const router = useRouter()
   const [articles, setArticles] = useState([])
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
@@ -16,13 +18,21 @@ export default function AdminPage() {
     fetchArticles()
   }, [])
 
-  async function fetchArticles() {
-    const { data } = await supabase
-      .from('articles')
-      .select('*')
-      .order('created_at', { ascending: false })
-    setArticles(data || [])
-  }
+async function fetchArticles() {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) return
+
+  const { data } = await supabase
+    .from('articles')
+    .select('*')
+    .eq('user_id', user.id)
+    .order('created_at', { ascending: false })
+
+  setArticles(data || [])
+}
 
   function generateSlug(title) {
     return title
@@ -52,52 +62,80 @@ export default function AdminPage() {
       .getPublicUrl(fileName)
     return data.publicUrl
   }
+async function handleSubmit() {
+  if (!title || !content) {
+    return alert('Title and content are required')
+  }
 
-  async function handleSubmit() {
-    if (!title || !content) return alert('Title and content are required')
-    setLoading(true)
+  setLoading(true)
 
-    try {
-      const slug = generateSlug(title)
-      let imageUrl = ''
+  try {
+    const slug = generateSlug(title)
+    let imageUrl = ''
 
-      if (imageFile) {
-        imageUrl = await uploadImage(imageFile)
-      }
-
-      if (editingId) {
-        const updateData = {
-          title,
-          content,
-          meta_description: metaDescription,
-          slug,
-          updated_at: new Date()
-        }
-        if (imageUrl) updateData.image_url = imageUrl
-
-        await supabase
-          .from('articles')
-          .update(updateData)
-          .eq('id', editingId)
-      } else {
-        await supabase
-          .from('articles')
-          .insert([{ title, content, image_url: imageUrl, meta_description: metaDescription, slug }])
-      }
-
-      setTitle('')
-      setContent('')
-      setImageFile(null)
-      setImagePreview('')
-      setMetaDescription('')
-      setEditingId(null)
-      fetchArticles()
-    } catch (err) {
-      alert('Error saving article: ' + err.message)
+    if (imageFile) {
+      imageUrl = await uploadImage(imageFile)
     }
 
-    setLoading(false)
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+
+    if (!user) {
+  alert("Please login to continue")
+  router.push("/login")
+  return
+}
+
+    if (editingId) {
+      const updateData = {
+        title,
+        content,
+        meta_description: metaDescription,
+        slug,
+        updated_at: new Date(),
+      }
+
+      if (imageUrl) {
+        updateData.image_url = imageUrl
+      }
+
+      await supabase
+        .from('articles')
+        .update(updateData)
+        .eq('id', editingId)
+
+    } else {
+
+      await supabase
+        .from('articles')
+        .insert([
+          {
+            title,
+            content,
+            image_url: imageUrl,
+            meta_description: metaDescription,
+            slug,
+            user_id: user.id,
+          },
+        ])
+    }
+
+    setTitle('')
+    setContent('')
+    setImageFile(null)
+    setImagePreview('')
+    setMetaDescription('')
+    setEditingId(null)
+
+    fetchArticles()
+
+  } catch (err) {
+    alert('Error saving article: ' + err.message)
   }
+
+  setLoading(false)
+}
 
   async function handleDelete(id) {
     if (!confirm('Are you sure?')) return
@@ -121,10 +159,10 @@ export default function AdminPage() {
     setMetaDescription(article.meta_description || '')
   }
 
-  function handleLogout() {
-    document.cookie = 'admin_auth=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT'
-    window.location.href = '/admin/login'
-  }
+ async function handleLogout() {
+  await supabase.auth.signOut()
+  window.location.href = '/'
+}
 
   return (
     <main className="max-w-4xl mx-auto px-4 py-10">
@@ -193,20 +231,44 @@ export default function AdminPage() {
         )}
       </div>
 
-      <h2 className="text-xl font-semibold mb-4">All Articles</h2>
-      {articles.map((article) => (
+      <h2 className="text-xl font-semibold mb-4">My Articles</h2>
+
+{articles.length === 0 ? (
+  <div className="border rounded-lg p-6 text-center">
+    <h3 className="text-lg font-semibold">
+      Create your first article
+    </h3>
+    <p className="text-gray-500 mt-2">
+      You haven't published any articles yet.
+    </p>
+  </div>
+) : (
+  articles.map((article) => (
         <div key={article.id} className="border rounded-lg p-4 mb-4 flex justify-between items-center">
           <div>
-            <p className="font-semibold">{article.title}</p>
+           <p className="font-semibold">{article.title}</p>
+
+<p className="text-sm">
+  Status:
+  {article.published ? " Published" : " Draft"}
+</p>
             <p className="text-sm text-gray-400">{article.slug}</p>
           </div>
           <div className="flex gap-2">
+
             <button
               onClick={() => togglePublish(article)}
             className={`px-3 py-1 rounded text-sm cursor-pointer ${article.published ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}
             >
               {article.published ? 'Published' : 'Draft'}
             </button>
+            <a
+  href={`/articles/${article.slug}`}
+  target="_blank"
+  className="px-3 py-1 rounded text-sm bg-blue-100 text-blue-700 cursor-pointer"
+>
+  View
+</a>
             <button
               onClick={() => handleEdit(article)}
             className="px-3 py-1 rounded text-sm bg-yellow-100 text-yellow-700 cursor-pointer"
@@ -222,7 +284,8 @@ export default function AdminPage() {
             </button>
           </div>
         </div>
-      ))}
+      ))
+)}
     </main>
   )
 }
