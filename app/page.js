@@ -80,7 +80,6 @@ export default async function Home() {
                     <p className="opacity-80 mb-6">
                       {article.meta_description}
                     </p>
-
                     <Link
                       href={`/articles/${article.slug}`}
                       className="readmore-btn"

@@ -4,7 +4,7 @@ import { supabase } from '@/lib/supabase'
 import { useRouter } from "next/navigation"
 
 export default function AdminPage() {
-    const router = useRouter()
+  const router = useRouter()
   const [articles, setArticles] = useState([])
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
@@ -18,21 +18,21 @@ export default function AdminPage() {
     fetchArticles()
   }, [])
 
-async function fetchArticles() {
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  async function fetchArticles() {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
 
-  if (!user) return
+    if (!user) return
 
-  const { data } = await supabase
-    .from('articles')
-    .select('*')
-    .eq('user_id', user.id)
-    .order('created_at', { ascending: false })
+    const { data } = await supabase
+      .from('articles')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
 
-  setArticles(data || [])
-}
+    setArticles(data || [])
+  }
 
   function generateSlug(title) {
     return title
@@ -62,80 +62,90 @@ async function fetchArticles() {
       .getPublicUrl(fileName)
     return data.publicUrl
   }
-async function handleSubmit() {
-  if (!title || !content) {
-    return alert('Title and content are required')
-  }
-
-  setLoading(true)
-
-  try {
-    const slug = generateSlug(title)
-    let imageUrl = ''
-
-    if (imageFile) {
-      imageUrl = await uploadImage(imageFile)
+  async function handleSubmit() {
+    if (!title || !content) {
+      return alert('Title and content are required')
     }
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
+    setLoading(true)
 
-    if (!user) {
-  alert("Please login to continue")
-  router.push("/login")
-  return
-}
+    try {
+      const slug = generateSlug(title)
+      let imageUrl = ''
 
-    if (editingId) {
-      const updateData = {
-        title,
-        content,
-        meta_description: metaDescription,
-        slug,
-        updated_at: new Date(),
+      if (imageFile) {
+        imageUrl = await uploadImage(imageFile)
+      }
+      let finalMetaDescription = metaDescription;
+
+      if (!finalMetaDescription.trim()) {
+        finalMetaDescription = content
+          .replace(/\n/g, " ")
+          .split(" ")
+          .slice(0, 20)
+          .join(" ");
+      }
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+
+      if (!user) {
+        setLoading(false)
+        router.push("/login")
+        return
       }
 
-      if (imageUrl) {
-        updateData.image_url = imageUrl
+      if (editingId) {
+
+        const updateData = {
+          title,
+          content,
+          meta_description: finalMetaDescription,
+          slug,
+          updated_at: new Date(),
+        }
+
+        if (imageUrl) {
+          updateData.image_url = imageUrl
+        }
+
+        await supabase
+          .from('articles')
+          .update(updateData)
+          .eq('id', editingId)
+
+      } else {
+
+        await supabase
+          .from('articles')
+          .insert([
+            {
+              title,
+              content,
+              image_url: imageUrl,
+              meta_description: finalMetaDescription,
+              slug,
+              user_id: user.id,
+            },
+          ])
+
       }
 
-      await supabase
-        .from('articles')
-        .update(updateData)
-        .eq('id', editingId)
+      setTitle('')
+      setContent('')
+      setImageFile(null)
+      setImagePreview('')
+      setMetaDescription('')
+      setEditingId(null)
 
-    } else {
+      fetchArticles()
 
-      await supabase
-        .from('articles')
-        .insert([
-          {
-            title,
-            content,
-            image_url: imageUrl,
-            meta_description: metaDescription,
-            slug,
-            user_id: user.id,
-          },
-        ])
+    } catch (err) {
+      alert('Error saving article: ' + err.message)
     }
 
-    setTitle('')
-    setContent('')
-    setImageFile(null)
-    setImagePreview('')
-    setMetaDescription('')
-    setEditingId(null)
-
-    fetchArticles()
-
-  } catch (err) {
-    alert('Error saving article: ' + err.message)
+    setLoading(false)
   }
-
-  setLoading(false)
-}
 
   async function handleDelete(id) {
     if (!confirm('Are you sure?')) return
@@ -159,10 +169,10 @@ async function handleSubmit() {
     setMetaDescription(article.meta_description || '')
   }
 
- async function handleLogout() {
-  await supabase.auth.signOut()
-  window.location.href = '/'
-}
+  async function handleLogout() {
+    await supabase.auth.signOut()
+    window.location.href = '/'
+  }
 
   return (
     <main className="max-w-4xl mx-auto px-4 py-10">
@@ -187,11 +197,11 @@ async function handleSubmit() {
           onChange={(e) => setTitle(e.target.value)}
         />
         <textarea
-        className="w-full border rounded px-3 py-2 mb-3 h-60 bg-white text-black font-mono text-sm"
-        placeholder={`Write content in markdown format:\n\n## Heading\n**bold text**\n- bullet point\n- another point`}
-        value={content}
-        onChange={(e) => setContent(e.target.value)}
-      />
+          className="w-full border rounded px-3 py-2 mb-3 h-60 bg-white text-black font-mono text-sm"
+          placeholder={`Write content in markdown format:\n\n## Heading\n**bold text**\n- bullet point\n- another point`}
+          value={content}
+          onChange={(e) => setContent(e.target.value)}
+        />
         <input
           className="w-full border rounded px-3 py-2 mb-3 bg-white text-black"
           placeholder="Meta description (optional)"
@@ -233,59 +243,59 @@ async function handleSubmit() {
 
       <h2 className="text-xl font-semibold mb-4">My Articles</h2>
 
-{articles.length === 0 ? (
-  <div className="border rounded-lg p-6 text-center">
-    <h3 className="text-lg font-semibold">
-      Create your first article
-    </h3>
-    <p className="text-gray-500 mt-2">
-      You haven't published any articles yet.
-    </p>
-  </div>
-) : (
-  articles.map((article) => (
-        <div key={article.id} className="border rounded-lg p-4 mb-4 flex justify-between items-center">
-          <div>
-           <p className="font-semibold">{article.title}</p>
-
-<p className="text-sm">
-  Status:
-  {article.published ? " Published" : " Draft"}
-</p>
-            <p className="text-sm text-gray-400">{article.slug}</p>
-          </div>
-          <div className="flex gap-2">
-
-            <button
-              onClick={() => togglePublish(article)}
-            className={`px-3 py-1 rounded text-sm cursor-pointer ${article.published ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}
-            >
-              {article.published ? 'Published' : 'Draft'}
-            </button>
-            <a
-  href={`/articles/${article.slug}`}
-  target="_blank"
-  className="px-3 py-1 rounded text-sm bg-blue-100 text-blue-700 cursor-pointer"
->
-  View
-</a>
-            <button
-              onClick={() => handleEdit(article)}
-            className="px-3 py-1 rounded text-sm bg-yellow-100 text-yellow-700 cursor-pointer"
-
-            >
-              Edit
-            </button>
-            <button
-              onClick={() => handleDelete(article.id)}
-            className="px-3 py-1 rounded text-sm bg-red-100 text-red-700 cursor-pointer"
-            >
-              Delete
-            </button>
-          </div>
+      {articles.length === 0 ? (
+        <div className="border rounded-lg p-6 text-center">
+          <h3 className="text-lg font-semibold">
+            Create your first article
+          </h3>
+          <p className="text-gray-500 mt-2">
+            You haven't published any articles yet.
+          </p>
         </div>
-      ))
-)}
+      ) : (
+        articles.map((article) => (
+          <div key={article.id} className="border rounded-lg p-4 mb-4 flex justify-between items-center">
+            <div>
+              <p className="font-semibold">{article.title}</p>
+
+              <p className="text-sm">
+                Status:
+                {article.published ? " Published" : " Draft"}
+              </p>
+              <p className="text-sm text-gray-400">{article.slug}</p>
+            </div>
+            <div className="flex gap-2">
+
+              <button
+                onClick={() => togglePublish(article)}
+                className={`px-3 py-1 rounded text-sm cursor-pointer ${article.published ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}
+              >
+                {article.published ? 'Published' : 'Draft'}
+              </button>
+              <a
+                href={`/articles/${article.slug}`}
+                target="_blank"
+                className="px-3 py-1 rounded text-sm bg-blue-100 text-blue-700 cursor-pointer"
+              >
+                View
+              </a>
+              <button
+                onClick={() => handleEdit(article)}
+                className="px-3 py-1 rounded text-sm bg-yellow-100 text-yellow-700 cursor-pointer"
+
+              >
+                Edit
+              </button>
+              <button
+                onClick={() => handleDelete(article.id)}
+                className="px-3 py-1 rounded text-sm bg-red-100 text-red-700 cursor-pointer"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        ))
+      )}
     </main>
   )
 }
